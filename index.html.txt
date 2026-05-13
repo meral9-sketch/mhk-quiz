@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MHK Günlük Quiz</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;min-height:100vh;font-size:15px}
+
+/* ── EKRANLAR ── */
+.ekran{display:none;min-height:100vh}
+.ekran.aktif{display:flex;flex-direction:column}
+
+/* ── GİRİŞ ── */
+#giris{background:linear-gradient(160deg,#1F4E79,#2980b9);align-items:center;justify-content:center;padding:20px}
+.g-kart{background:#fff;border-radius:20px;padding:32px 26px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.g-logo{text-align:center;margin-bottom:20px}
+.g-logo .uni{font-size:11px;font-weight:700;color:#1F4E79;letter-spacing:1.2px;text-transform:uppercase}
+.g-logo .ders{font-size:18px;font-weight:800;color:#1F4E79;margin-top:4px;line-height:1.3}
+.g-logo .alt{font-size:12px;color:#999;margin-top:3px}
+.hafta-bant{border-radius:12px;padding:14px;text-align:center;margin-bottom:22px;color:#fff}
+.hafta-bant h2{font-size:17px;font-weight:800}
+.hafta-bant p{font-size:12px;opacity:.85;margin-top:4px}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:5px}
+.fg input{width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:15px;outline:none;font-family:inherit;transition:border-color .2s}
+.fg input:focus{border-color:#1F4E79}
+.uyari-kutu{border-radius:8px;padding:11px 13px;font-size:12px;line-height:1.7;margin-bottom:18px}
+.btn-bas{width:100%;border:none;padding:14px;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;color:#fff;font-family:inherit;transition:opacity .2s}
+.btn-bas:active{opacity:.85}
+
+/* ── SINAV HEADER ── */
+#sinav{background:#f0f4f8}
+.s-hdr{color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;flex-wrap:wrap}
+.s-hdr .ogr{flex:1;min-width:0}
+.s-hdr .ogr strong{font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s-hdr .ogr span{font-size:11px;opacity:.75}
+.prog-w{flex:1;min-width:80px}
+.prog-bg{background:rgba(255,255,255,.25);border-radius:10px;height:6px}
+.prog-f{background:#2ecc71;border-radius:10px;height:6px;transition:width .4s}
+.prog-t{font-size:10px;opacity:.7;margin-top:2px;text-align:center}
+.sayac{background:rgba(255,255,255,.18);padding:6px 12px;border-radius:8px;font-size:16px;font-weight:800;min-width:64px;text-align:center;font-variant-numeric:tabular-nums}
+.sayac.kirmizi{background:rgba(231,76,60,.85);animation:yanip .8s infinite}
+@keyframes yanip{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ── SORU KARTLARI ── */
+.s-body{padding:14px;max-width:680px;margin:0 auto;width:100%}
+.soru-k{background:#fff;border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.soru-meta{display:flex;align-items:center;gap:7px;margin-bottom:11px;flex-wrap:wrap}
+.s-no{width:26px;height:26px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.tip-r{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:700}
+.konu-r{font-size:11px;color:#999;margin-left:auto}
+.puan-r{font-size:11px;padding:3px 8px;border-radius:20px;background:#f0f4f8;color:#666;font-weight:600}
+.soru-txt{font-size:14px;color:#1a1a1a;line-height:1.65;margin-bottom:12px;font-weight:500}
+.alan-lbl{font-size:12px;color:#666;font-weight:700;display:block;margin-bottom:4px;margin-top:8px}
+.inp{width:100%;border:2px solid #e8e8e8;border-radius:9px;padding:10px 12px;font-size:15px;font-family:inherit;outline:none;transition:border-color .2s;background:#fafafa}
+.inp:focus{border-color:#1F4E79;background:#fff}
+.txt-inp{width:100%;border:2px solid #e8e8e8;border-radius:9px;padding:10px 12px;font-size:14px;resize:none;min-height:90px;font-family:inherit;outline:none;transition:border-color .2s;background:#fafafa;line-height:1.5}
+.txt-inp:focus{background:#fff}
+.bosluk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:400px){.bosluk-grid{grid-template-columns:1fr}}
+.teslim-wrap{text-align:center;padding:10px 0 50px}
+.btn-teslim{background:#27ae60;color:#fff;border:none;padding:14px 40px;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 15px rgba(39,174,96,.4)}
+.btn-teslim:active{opacity:.85}
+
+/* ── YÜKLEME ── */
+#yukleme{background:#f0f4f8;align-items:center;justify-content:center;padding:20px}
+.y-kart{background:#fff;border-radius:20px;padding:50px 36px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.1);max-width:360px;width:100%}
+.spinner{width:56px;height:56px;border:5px solid #e8e8e8;border-top-color:#1F4E79;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 18px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.y-kart h3{color:#1F4E79;font-size:18px;margin-bottom:8px}
+.y-kart p{color:#888;font-size:13px;line-height:1.6}
+.ai-dots{display:flex;justify-content:center;gap:6px;margin-top:14px}
+.ai-dot{width:9px;height:9px;border-radius:50%;animation:bounce .9s infinite}
+.ai-dot:nth-child(2){animation-delay:.2s}
+.ai-dot:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* ── SONUÇ ── */
+#sonuc{background:#f0f4f8;overflow-y:auto;padding:14px}
+.son-k{background:#fff;border-radius:16px;padding:22px;max-width:680px;margin:0 auto 14px;box-shadow:0 3px 15px rgba(0,0,0,.08);width:100%}
+.nd{width:110px;height:110px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 12px;border:5px solid}
+.nd.gec{border-color:#27ae60;background:#eafaf1}
+.nd.kaldi{border-color:#e74c3c;background:#fdedec}
+.nd-p{font-size:36px;font-weight:800}
+.nd.gec .nd-p{color:#27ae60}
+.nd.kaldi .nd-p{color:#e74c3c}
+.nd-a{font-size:12px;color:#999}
+.harf{font-size:24px;font-weight:800;text-align:center;margin-bottom:4px}
+.mesaj{font-size:14px;color:#666;text-align:center;margin-bottom:3px}
+.ogr-a{text-align:center;font-size:12px;color:#aaa;margin-bottom:16px}
+.ist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.ist{text-align:center;padding:12px 6px;border-radius:10px}
+.ist.d{background:#eafaf1}.ist.y{background:#fdedec}.ist.s{background:#EBF5FB}
+.ist-n{font-size:24px;font-weight:800}
+.ist.d .ist-n{color:#27ae60}.ist.y .ist-n{color:#e74c3c}.ist.s .ist-n{color:#2980b9}
+.ist-l{font-size:11px;color:#888;margin-top:2px}
+.det-bas{font-size:14px;font-weight:700;color:#333;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid #f0f4f8}
+.det-s{padding:12px;border-radius:10px;margin-bottom:8px}
+.det-s.tam{background:#eafaf1;border-left:4px solid #27ae60}
+.det-s.yanl{background:#fdedec;border-left:4px solid #e74c3c}
+.det-s.kism{background:#fff8e1;border-left:4px solid #f39c12}
+.det-no{font-size:11px;font-weight:700;color:#888;margin-bottom:3px}
+.det-sat{font-size:12px;margin-bottom:3px;line-height:1.5}
+.dc{color:#27ae60;font-weight:600}.yc{color:#e74c3c;font-weight:600}
+.det-puan{float:right;font-size:12px;font-weight:700}
+.ai-badge{display:inline-flex;align-items:center;gap:4px;background:#f3e5f5;color:#8e44ad;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:10px}
+.sheets-badge{display:inline-flex;align-items:center;gap:4px;background:#e8f5e9;color:#27ae60;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:10px;margin-left:6px}
+.btn-tekrar{width:100%;background:#1F4E79;color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:14px;font-family:inherit}
+.kayit-durum{text-align:center;font-size:12px;margin-top:10px;padding:8px;border-radius:8px}
+.kayit-durum.ok{background:#eafaf1;color:#27ae60}
+.kayit-durum.hata{background:#fdedec;color:#e74c3c}
+</style>
+</head>
+<body>
+
+<!-- GİRİŞ -->
+<div id="giris" class="ekran aktif">
+<div class="g-kart">
+  <div class="g-logo">
+    <div class="uni">🏛 T.C. Munzur Üniversitesi · Pertek Sakine Genç MYO</div>
+    <div class="ders">Haritacılıkta Mesleki Hesaplamalar</div>
+    <div class="alt">Dr. Öğr. Üyesi Meral Korkmaz · 2025–2026 Bahar</div>
+  </div>
+
+  <div class="hafta-bant" id="hafta-bant">
+    <h2 id="hafta-baslik">⏳ Yükleniyor...</h2>
+    <p id="hafta-alt">Lütfen bekleyiniz</p>
+  </div>
+
+  <div class="fg"><label>👤 Adınız Soyadınız</label>
+    <input type="text" id="inp-adi" placeholder="Ahmet Yılmaz" autocomplete="name"></div>
+  <div class="fg"><label>🔢 Öğrenci Numaranız</label>
+    <input type="text" id="inp-no" placeholder="251630023" inputmode="numeric"></div>
+
+  <div class="uyari-kutu" id="uyari-kutu" style="display:none"></div>
+
+  <div class="uyari-kutu" style="background:#FEF9E7;border-left:4px solid #F39C12;color:#7D6608">
+    ⚠️ <strong>Dikkat:</strong> Sınav başladıktan sonra <strong>20 dakikan</strong> var.
+    Sayfayı kapatmayın, sekmeler arası geçiş yaparsanız uyarı alırsınız.
+    Her öğrenciye <strong>farklı sayılar</strong> gelir — kopya işe yaramaz!
+  </div>
+  <br>
+  <button class="btn-bas" id="btn-bas" onclick="baslat()" style="background:#1F4E79">🚀 Sınavı Başlat</button>
+</div>
+</div>
+
+<!-- SINAV -->
+<div id="sinav" class="ekran">
+  <div class="s-hdr" id="s-hdr">
+    <div class="ogr"><strong id="h-isim">—</strong><span id="h-no">—</span></div>
+    <div class="prog-w">
+      <div class="prog-bg"><div class="prog-f" id="p-f" style="width:0%"></div></div>
+      <div class="prog-t" id="p-t">0 / 15</div>
+    </div>
+    <div class="sayac" id="sayac">20:00</div>
+  </div>
+  <div class="s-body" id="s-body"></div>
+</div>
+
+<!-- YÜKLEME -->
+<div id="yukleme" class="ekran">
+  <div class="y-kart">
+    <div class="spinner"></div>
+    <h3>✨ Değerlendiriliyor...</h3>
+    <p>Cevaplarınız analiz ediliyor<br>ve sisteme kaydediliyor.<br>Lütfen bekleyiniz...</p>
+    <div class="ai-dots">
+      <div class="ai-dot" style="background:#1F4E79"></div>
+      <div class="ai-dot" style="background:#2980b9"></div>
+      <div class="ai-dot" style="background:#27ae60"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SONUÇ -->
+<div id="sonuc" class="ekran">
+  <div class="son-k" id="son-ozet"></div>
+  <div class="son-k" id="son-detay"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  ⚙️  AYARLAR — Buraya Google Apps Script URL'ini yapıştır
+// ═══════════════════════════════════════════════════════════
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyOANKQLpLQOGUPePx8-fkhlRqSkQ-SH0st7TUUi2AvrLV3nNtPlys4828fNFNKh_VPsw/exec";
+// Örnek: "https://script.google.com/macros/s/AKfycb.../exec"
+
+const SURE_DK = 20; // dakika
+const TOPLAM_SORU = 15;
+
+// ═══════════════════════════════════════════════════════════
+//  HAFTA VERİSİ — URL parametresinden okur (?hafta=3)
+// ═══════════════════════════════════════════════════════════
+const urlParams = new URLSearchParams(window.location.search);
+const HAFTA_NO = parseInt(urlParams.get("hafta")) || 1;
+
+const HAFTA_BILGI = {
+  1:  {baslik:"Hafta 1 — Haritacılığa Giriş",     renk:"#1F4E79", konular:["birim","ölçek","tanım"]},
+  2:  {baslik:"Hafta 2 — Ölçek Hesapları",         renk:"#16a085", konular:["ölçek","alan","uzunluk"]},
+  3:  {baslik:"Hafta 3 — Hata Kavramı",            renk:"#8e44ad", konular:["hata","ortalama","bağıl"]},
+  4:  {baslik:"Hafta 4 — Açı Birimleri",           renk:"#c0392b", konular:["derece","grad","DMS"]},
+  5:  {baslik:"Hafta 5 — Alan Hesabı",             renk:"#27ae60", konular:["üçgen","yamuk","heron"]},
+  6:  {baslik:"Hafta 6 — Koordinat",               renk:"#d35400", konular:["X","Y","uzaklık","azimut"]},
+  7:  {baslik:"Hafta 7 — Nivelman",                renk:"#2980b9", konular:["kot","arka","ön okuma"]},
+  8:  {baslik:"Hafta 8 — Eğim",                    renk:"#1abc9c", konular:["eğim","%","‰"]},
+  9:  {baslik:"Hafta 9 — Hacim",                   renk:"#8e44ad", konular:["prizma","silindir","kazı"]},
+  10: {baslik:"Hafta 10 — Kadastro",               renk:"#2c3e50", konular:["parsel","ifraz","tevhid"]},
+  11: {baslik:"Hafta 11 — Trigonometri",           renk:"#e74c3c", konular:["sin","cos","tan"]},
+  12: {baslik:"Hafta 12 — CBS & Uzaktan Algılama", renk:"#16a085", konular:["CBS","vektör","raster"]},
+  13: {baslik:"Hafta 13 — GPS & GNSS",             renk:"#1F4E79", konular:["GPS","RTK","GNSS"]},
+  14: {baslik:"Hafta 14 — İmar Planı",             renk:"#27ae60", konular:["TAKS","KAKS","imar"]},
+  15: {baslik:"Hafta 15 — Genel Tekrar",           renk:"#8e44ad", konular:["karma","formül","tekrar"]},
+};
+
+const hb = HAFTA_BILGI[HAFTA_NO] || HAFTA_BILGI[1];
+
+// Giriş ekranını doldur
+document.getElementById("hafta-bant").style.background = hb.renk;
+document.getElementById("hafta-baslik").textContent = "📚 " + hb.baslik;
+document.getElementById("hafta-alt").textContent = `15 Soru · ${SURE_DK} Dakika · 100 Puan`;
+document.getElementById("btn-bas").style.background = hb.renk;
+
+// ═══════════════════════════════════════════════════════════
+//  RASTGELE SAYI ÜRETİCİ — Seed tabanlı (her öğrenciye farklı)
+// ═══════════════════════════════════════════════════════════
+function seedRandom(seed) {
+  // Basit ama tutarlı pseudo-random
+  let s = seed;
+  return function() {
+    s = (s * 1664525 + 1013904223) & 0xFFFFFFFF;
+    return (s >>> 0) / 0xFFFFFFFF;
+  };
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SORU ÜRETECİ — Seed'e göre farklı sayılar
+// ═══════════════════════════════════════════════════════════
+function soruUret(seed) {
+  const rng = seedRandom(seed);
+  const r = (min, max, step=1) => {
+    const sayi = min + Math.floor(rng() * ((max - min) / step + 1)) * step;
+    return Math.min(sayi, max);
+  };
+
+  // Her hafta için 15 soru üret
+  const sorular_h = {
+
+    // ── HAFTA 1 ──
+    1: () => {
+      const a1 = r(2,20)*500; const a2 = r(3,15)*1000; const a3 = r(100,900,100);
+      return [
+        {tip:"tanim",puan:6,konu:"Haritacılık Temelleri",
+          soru:"Haritacılık nedir? Koordinat ve pafta kavramlarını açıklayınız.",
+          anahtarlar:["yeryüzü","ölçme","aktarma","koordinat","konum","pafta"],
+          ideal:"Haritacılık, yeryüzünün şeklini ölçerek düzleme aktarma bilimidir. Koordinat bir noktanın X-Y konumunu, pafta ise haritanın belirli bölgesini gösteren sayfayı ifade eder."},
+        {tip:"sayisal",puan:6,konu:"Birim Dönüşümü",
+          soru:`${a1} m² kaç dönümdür? Kaç hektardır?`,
+          alanlar:[
+            {key:"donüm",label:"Dönüm:",ph:"dönüm",dogru:a1/1000,tol:0.01},
+            {key:"hektar",label:"Hektar:",ph:"hektar",dogru:a1/10000,tol:0.001},
+          ],cozum:`${a1} ÷ 1000 = ${a1/1000} dönüm | ${a1} ÷ 10000 = ${a1/10000} hektar`},
+        {tip:"bosluk",puan:8,konu:"Temel Birimler",
+          satirlar:[
+            {l:"1 dönüm = ______ m²",d:"1000",ak:["1000","1 000"]},
+            {l:"1 hektar = ______ m²",d:"10000",ak:["10000","10 000"]},
+            {l:"1 km = ______ m",d:"1000",ak:["1000","1 000"]},
+            {l:"Tam çember = ______ derece",d:"360",ak:["360"]},
+          ]},
+        {tip:"sayisal",puan:5,konu:"Birim Dönüşümü",
+          soru:`${a2} m² kaç dönümdür?`,
+          alanlar:[{key:"s",label:"Dönüm:",ph:"dönüm",dogru:a2/1000,tol:0.01}],
+          cozum:`${a2} ÷ 1000 = ${a2/1000} dönüm`},
+        {tip:"tanim",puan:5,konu:"Harita Türleri",
+          soru:"Topografik harita ile kadastro haritası arasındaki farkı açıklayınız.",
+          anahtarlar:["topografik","arazi","eş yükselti","kadastro","sınır","mülkiyet","parsel"],
+          ideal:"Topografik harita arazi şekillerini eş yükselti eğrileriyle gösterir. Kadastro haritası taşınmaz sınırlarını ve mülkiyet bilgilerini gösterir."},
+        {tip:"sayisal",puan:5,konu:"Birim Dönüşümü",
+          soru:`${a3} dönüm kaç hektardır?`,
+          alanlar:[{key:"s",label:"Hektar:",ph:"hektar",dogru:a3/10,tol:0.05}],
+          cozum:`${a3} dönüm × 1000 m² = ${a3*1000} m² ÷ 10000 = ${a3/10} hektar`},
+        {tip:"bosluk",puan:5,konu:"Haritacılık Kavramları",
+          satirlar:[
+            {l:"Arazi ölçme sonuçlarını düzleme aktarma bilimine ______ denir.",d:"haritacılık",ak:["haritacılık","jeodezi"]},
+            {l:"Taşınmazların sınırlarını belirleyen çalışmaya ______ denir.",d:"kadastro",ak:["kadastro"]},
+          ]},
+        {tip:"sayisal",puan:5,konu:"Birim Dönüşümü",
+          soru:`3,75 km kaç metredir?`,
+          alanlar:[{key:"s",label:"Metre:",ph:"m",dogru:3750,tol:1}],
+          cozum:"3,75 × 1000 = 3750 m"},
+        {tip:"tanim",puan:4,konu:"Nirengi ve Poligon",
+          soru:"Nirengi ve poligon (traverse) kavramlarını kısaca açıklayınız.",
+          anahtarlar:["nirengi","sabit","ülke","koordinat","poligon","traverse","kenar","zincir"],
+          ideal:"Nirengi, ülke koordinat sistemine bağlı zemine sabit ölçme noktasıdır. Poligon (traverse), arazide birbirine bağlı ölçülen kenar zinciridir."},
+        {tip:"sayisal",puan:4,konu:"Birim Dönüşümü",
+          soru:`${r(5,15)*10} dönüm kaç m²'dir?`,
+          alanlar:[{key:"s",label:"m²:",ph:"m²",dogru:r(5,15)*10*1000,tol:1}],
+          cozum:"Dönüm × 1000 = m²"},
+        {tip:"bosluk",puan:4,konu:"Birimler",
+          satirlar:[
+            {l:"500 dönüm = ______ m²",d:"500000",ak:["500000","500 000"]},
+            {l:"2 hektar = ______ m²",d:"20000",ak:["20000","20 000"]},
+          ]},
+        {tip:"sayisal",puan:4,konu:"Birim Dönüşümü",
+          soru:`${r(1,5)*10} hektar kaç m²'dir?`,
+          alanlar:[{key:"s",label:"m²:",ph:"m²",dogru:r(1,5)*10*10000,tol:1}],
+          cozum:"Hektar × 10000 = m²"},
+        {tip:"tanim",puan:4,konu:"Koordinat Sistemi",
+          soru:"Haritacılıkta X ve Y eksenlerinin hangi yönleri gösterdiğini belirtiniz. Matematiğin XY sisteminden farkı nedir?",
+          anahtarlar:["x","kuzey","y","doğu","matematik","ters","farklı"],
+          ideal:"Haritacılıkta X ekseni Kuzey, Y ekseni Doğu yönünü gösterir. Bu, matematiğin XY sisteminin tersidir."},
+        {tip:"sayisal",puan:4,konu:"Birim Dönüşümü",
+          soru:`${r(2,8)*250} m² kaç dönümdür?`,
+          alanlar:[{key:"s",label:"Dönüm:",ph:"dönüm",dogru:r(2,8)*250/1000,tol:0.01}],
+          cozum:"m² ÷ 1000 = dönüm"},
+        {tip:"bosluk",puan:6,konu:"Genel Kavramlar",
+          satirlar:[
+            {l:"Ülke koordinat sistemine bağlı temel ölçme noktasına ______ denir.",d:"nirengi",ak:["nirengi"]},
+            {l:"Haritacılıkta X ekseni ______ yönünü gösterir.",d:"kuzey",ak:["kuzey","north"]},
+            {l:"1 km² = ______ hektar",d:"100",ak:["100"]},
+          ]},
+      ];
+    },
+
+    // ── HAFTA 2 ──
+    2: () => {
+      const M1=r(1,5)*500, M2=r(1,4)*1000, huzn=r(2,12)*0.5, gercek=r(50,400,50);
+      const haritaAlan=r(4,20)*2, M3=r(2,5)*500;
+      return [
+        {tip:"tanim",puan:6,konu:"Ölçek Kavramı",
+          soru:"Ölçek nedir? Büyük ölçekli ve küçük ölçekli harita arasındaki farkı örnekle açıklayınız.",
+          anahtarlar:["harita","uzunluk","gerçek","oran","büyük","detay","küçük","geniş"],
+          ideal:"Ölçek, haritadaki uzunluğun gerçek uzunluğa oranıdır (1/M). Büyük ölçekli harita (1/500–1/5000) az alan ama çok detay gösterir; küçük ölçekli (1/250000+) geniş alanı az detayla gösterir."},
+        {tip:"sayisal",puan:7,konu:"Ölçek — Uzunluk",
+          soru:`1/${M1} ölçekli haritada ${huzn} cm olarak ölçülen mesafe gerçekte kaç metredir?`,
+          alanlar:[{key:"s",label:"Gerçek mesafe (m):",ph:"m",dogru:parseFloat((huzn*M1/100).toFixed(2)),tol:0.5}],
+          cozum:`${huzn} cm × ${M1} = ${huzn*M1} cm = ${huzn*M1/100} m`},
+        {tip:"sayisal",puan:6,konu:"Ölçek — Uzunluk",
+          soru:`Gerçekte ${gercek} m olan mesafe 1/${M2} ölçekli haritada kaç cm olarak çizilir?`,
+          alanlar:[{key:"s",label:"Harita uzunluğu (cm):",ph:"cm",dogru:parseFloat((gercek*100/M2).toFixed(2)),tol:0.1}],
+          cozum:`${gercek} m = ${gercek*100} cm ÷ ${M2} = ${(gercek*100/M2).toFixed(2)} cm`},
+        {tip:"sayisal",puan:7,konu:"Ölçek — Alan",
+          soru:`1/${M3} ölçekli haritada ölçülen parsel alanı ${haritaAlan} cm²'dir. Gerçek alan kaç m²'dir?`,
+          alanlar:[{key:"s",label:"Gerçek alan (m²):",ph:"m²",dogru:haritaAlan*M3*M3/10000,tol:1}],
+          cozum:`${haritaAlan} cm² × ${M3}² = ${haritaAlan} × ${M3*M3} = ${haritaAlan*M3*M3} cm² = ${haritaAlan*M3*M3/10000} m²`},
+        {tip:"bosluk",puan:8,konu:"Ölçek Formülleri",
+          satirlar:[
+            {l:"Gerçek uzunluk = Harita uzunluğu × ______",d:"M",ak:["m","ölçek katsayısı"]},
+            {l:"Harita uzunluğu = Gerçek uzunluk ÷ ______",d:"M",ak:["m","ölçek katsayısı"]},
+            {l:"Gerçek alan = Harita alanı × ______",d:"M²",ak:["m²","m^2"]},
+            {l:"1/1000 ölçekte 1 cm = gerçekte ______ m",d:"10",ak:["10"]},
+          ]},
+        {tip:"tanim",puan:5,konu:"Ölçek Türleri",
+          soru:"1/500 ve 1/25000 ölçekli haritaları karşılaştırınız. Hangi çalışmalar için hangisi kullanılır?",
+          anahtarlar:["1/500","büyük","kadastro","imar","1/25000","küçük","topografik","geniş"],
+          ideal:"1/500 büyük ölçekli, kadastro ve imar için detaylı. 1/25000 orta ölçekli, topografik ve bölge planlaması için kullanılır."},
+        {tip:"sayisal",puan:5,konu:"Ölçek Hesabı",
+          soru:`1/2000 ölçekli haritada ${r(3,8)} cm'lik bir yol gerçekte kaç metredir?`,
+          alanlar:[{key:"s",label:"Gerçek mesafe (m):",ph:"m",dogru:r(3,8)*20,tol:0.5}],
+          cozum:"cm × 2000 / 100 = m"},
+        {tip:"sayisal",puan:5,konu:"Ölçek — Alan",
+          soru:`1/1000 ölçekli haritada ${r(5,15)} cm² olan alan gerçekte kaç m²'dir?`,
+          alanlar:[{key:"s",label:"Gerçek alan (m²):",ph:"m²",dogru:r(5,15)*100,tol:1}],
+          cozum:"cm² × 1000² / 10000 = m²"},
+        {tip:"bosluk",puan:4,konu:"Ölçek Dönüşümü",
+          satirlar:[
+            {l:"1/500 haritada 10 cm → gerçekte ______ m",d:"50",ak:["50"]},
+            {l:"1/2000 haritada 5 cm → gerçekte ______ m",d:"100",ak:["100"]},
+          ]},
+        {tip:"sayisal",puan:4,konu:"Ölçek Hesabı",
+          soru:`Gerçekte ${r(2,8)*100} m olan mesafe 1/5000 haritada kaç cm?`,
+          alanlar:[{key:"s",label:"Harita (cm):",ph:"cm",dogru:r(2,8)*100*100/5000,tol:0.1}],
+          cozum:"m × 100 / 5000 = cm"},
+        {tip:"tanim",puan:4,konu:"Ölçek Seçimi",
+          soru:"Bir kadastro çalışması için hangi ölçek seçilmelidir? Neden?",
+          anahtarlar:["kadastro","büyük","1/500","1/1000","2000","detay","sınır","parsel"],
+          ideal:"Kadastro çalışmaları için 1/500 – 1/2000 büyük ölçekler kullanılır; parsel sınırları ve detaylar net görülmelidir."},
+        {tip:"sayisal",puan:4,konu:"Ölçek — Alan",
+          soru:`1/500 haritada ${r(8,20)} cm² → gerçek alan kaç m²?`,
+          alanlar:[{key:"s",label:"m²:",ph:"m²",dogru:r(8,20)*25,tol:0.5}],
+          cozum:"cm² × 500² / 10000 = cm² × 25 = m²"},
+        {tip:"bosluk",puan:4,konu:"Ölçek Kavramları",
+          satirlar:[
+            {l:"Büyük ölçekli harita az ______, çok ______ gösterir.",d:"alan, detay",ak:["alan","detay"]},
+            {l:"Kadastro haritaları genellikle 1/______ veya 1/______ ölçeklidir.",d:"500 veya 1000",ak:["500","1000","2000"]},
+          ]},
+        {tip:"sayisal",puan:4,konu:"Ölçek Hesabı",
+          soru:`1/1000 haritada ${r(3,9)} cm → gerçekte kaç m?`,
+          alanlar:[{key:"s",label:"m:",ph:"m",dogru:r(3,9)*10,tol:0.1}],
+          cozum:"cm × 1000 / 100 = m"},
+        {tip:"tanim",puan:6,konu:"Ölçek ve Detay",
+          soru:"Ölçek büyüdükçe (1/500 → 1/5000) haritada ne değişir? Detay ve alan açısından açıklayınız.",
+          anahtarlar:["azalır","artar","detay","alan","küçülür","büyür"],
+          ideal:"Ölçek büyüdükçe (payda küçüldükçe) gösterilen alan küçülür fakat detay artar. Ölçek küçüldükçe (payda büyüdükçe) geniş alan az detayla gösterilir."},
+      ];
+    },
+
+    // ── HAFTA 7 — Nivelman (örnek olarak) ──
+    7: () => {
+      const hA=r(100,400,10)+r(0,9)*0.1, a=r(8,18)*0.1, b=r(5,25)*0.1;
+      const hA2=r(200,500,10), a2=r(10,20)*0.1, b2=r(8,22)*0.1;
+      return [
+        {tip:"tanim",puan:7,konu:"Nivelman Temelleri",
+          soru:"Nivelman nedir? Arka okuma ve ön okuma kavramlarını açıklayınız.",
+          anahtarlar:["nivelman","yükseklik","kot","arka okuma","bilinen","ön okuma","hesaplanacak","fark"],
+          ideal:"Nivelman, noktalar arası yükseklik farkını ölçme işlemidir. Arka okuma bilinen kottaki mira okuması, ön okuma ise kotu bulunacak noktadaki okumadır."},
+        {tip:"sayisal",puan:7,konu:"Nivelman — Kot Hesabı",
+          soru:`A noktası kotu ${hA.toFixed(2)} m. Arka okuma ${a.toFixed(2)} m, ön okuma ${b.toFixed(2)} m. B noktasının kotunu ve alet yüksekliğini bulunuz.`,
+          alanlar:[
+            {key:"ay",label:"Alet Yüksekliği (m):",ph:"m",dogru:parseFloat((hA+a).toFixed(2)),tol:0.01},
+            {key:"hb",label:"B Noktası Kotu (m):",ph:"m",dogru:parseFloat((hA+a-b).toFixed(2)),tol:0.01},
+          ],
+          cozum:`AY = ${hA.toFixed(2)} + ${a.toFixed(2)} = ${(hA+a).toFixed(2)} m | H_B = ${(hA+a).toFixed(2)} - ${b.toFixed(2)} = ${(hA+a-b).toFixed(2)} m`},
+        {tip:"bosluk",puan:8,konu:"Nivelman Formülleri",
+          satirlar:[
+            {l:"Yükseklik farkı: ΔH = Arka okuma – ______",d:"Ön okuma",ak:["ön okuma","b","önokuma"]},
+            {l:"H_B = H_A + ______",d:"ΔH",ak:["δh","∆h","ah","yükseklik farkı"]},
+            {l:"Alet Yüksekliği = H_A + ______",d:"a",ak:["a","arka okuma"]},
+            {l:"H_B = Alet Yüksekliği – ______",d:"b",ak:["b","ön okuma"]},
+          ]},
+        {tip:"sayisal",puan:6,konu:"Nivelman — Kot Hesabı",
+          soru:`A kotu ${hA2} m, arka okuma ${a2.toFixed(2)} m, ön okuma ${b2.toFixed(2)} m. ΔH ve H_B nedir?`,
+          alanlar:[
+            {key:"dh",label:"ΔH (m):",ph:"m",dogru:parseFloat((a2-b2).toFixed(2)),tol:0.01},
+            {key:"hb",label:"H_B (m):",ph:"m",dogru:parseFloat((hA2+a2-b2).toFixed(2)),tol:0.01},
+          ],
+          cozum:`ΔH = ${a2.toFixed(2)} - ${b2.toFixed(2)} = ${(a2-b2).toFixed(2)} m | H_B = ${hA2} + ${(a2-b2).toFixed(2)} = ${(hA2+a2-b2).toFixed(2)} m`},
+        ...Array(11).fill(null).map((_,i)=>({tip:"bosluk",puan:3,konu:"Nivelman",satirlar:[{l:`Yükseklik ölçme işlemine ______ denir.`,d:"nivelman",ak:["nivelman"]}]}))
+      ].slice(0,15);
+    },
+  };
+
+  // Hafta için soru üret, yoksa varsayılan
+  const hafta_fn = sorular_h[HAFTA_NO] || sorular_h[1];
+  return hafta_fn().slice(0, TOPLAM_SORU);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DURUM
+// ═══════════════════════════════════════════════════════════
+let adi="", no="", seed=0, sorular=[], sure=SURE_DK*60, timer=null, baslangic=null;
+
+// ═══════════════════════════════════════════════════════════
+//  GİRİŞ
+// ═══════════════════════════════════════════════════════════
+function baslat() {
+  adi = document.getElementById("inp-adi").value.trim();
+  no  = document.getElementById("inp-no").value.trim();
+  if (!adi || !no) { alert("Lütfen adınızı ve öğrenci numaranızı giriniz."); return; }
+
+  // Seed = öğrenci no + hafta → herkese farklı, aynı öğrenciye aynı hafta hep aynı
+  seed = 0;
+  for (let c of (no + HAFTA_NO)) seed = (seed * 31 + c.charCodeAt(0)) | 0;
+  seed = Math.abs(seed);
+
+  sorular = soruUret(seed);
+  goster("sinav");
+  document.getElementById("h-isim").textContent = adi;
+  document.getElementById("h-no").textContent = no;
+  document.getElementById("s-hdr").style.background = hb.renk;
+  soruOlustur();
+  sureBaslat();
+  tabKontrol();
+}
+
+function goster(id) {
+  document.querySelectorAll(".ekran").forEach(e=>e.classList.remove("aktif"));
+  document.getElementById(id).classList.add("aktif");
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB / SEKME DEĞİŞTİRME UYARISI
+// ═══════════════════════════════════════════════════════════
+let tabUyari = 0;
+function tabKontrol() {
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && document.getElementById("sinav").classList.contains("aktif")) {
+      tabUyari++;
+      // Uyarıyı kaydet ama sınavı durdurmuyoruz (sadece logluyoruz)
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SÜRE
+// ═══════════════════════════════════════════════════════════
+function sureBaslat() {
+  baslangic = Date.now();
+  timer = setInterval(() => {
+    sure--;
+    const dk = String(Math.floor(sure/60)).padStart(2,"0");
+    const sn = String(sure%60).padStart(2,"0");
+    const el = document.getElementById("sayac");
+    el.textContent = `${dk}:${sn}`;
+    if (sure <= 300) el.classList.add("kirmizi");
+    if (sure <= 0) { clearInterval(timer); bitir(); }
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SORU OLUŞTURMA
+// ═══════════════════════════════════════════════════════════
+function soruOlustur() {
+  const body = document.getElementById("s-body");
+  body.innerHTML = "";
+  const renkler = {tanim:"#8e44ad",sayisal:"#e67e22",bosluk:"#27ae60"};
+  const etiket  = {tanim:"Tanım",sayisal:"Sayısal",bosluk:"Boşluk"};
+
+  sorular.forEach((s,i) => {
+    const div = document.createElement("div");
+    div.className = "soru-k";
+    div.style.borderLeftColor = renkler[s.tip]||"#1F4E79";
+    let h = `<div class="soru-meta">
+      <div class="s-no" style="background:${renkler[s.tip]||"#1F4E79"}">${i+1}</div>
+      <span class="tip-r" style="background:${renkler[s.tip]}22;color:${renkler[s.tip]}">${etiket[s.tip]}</span>
+      <span class="konu-r">${s.konu}</span>
+      <span class="puan-r">${s.puan}p</span>
+    </div>`;
+
+    if (s.tip==="tanim") {
+      h += `<div class="soru-txt">${s.soru}</div>
+      <textarea class="txt-inp" id="c${i}" rows="4" placeholder="Cevabınızı buraya yazınız..." oninput="prog()"></textarea>`;
+    } else if (s.tip==="sayisal") {
+      h += `<div class="soru-txt">${s.soru}</div>`;
+      s.alanlar.forEach(a => {
+        h += `<label class="alan-lbl">${a.label}</label>
+        <input class="inp" type="text" inputmode="decimal" id="c${i}_${a.key}" placeholder="${a.ph}" oninput="prog()">`;
+      });
+    } else {
+      h += `<div class="bosluk-grid">`;
+      s.satirlar.forEach((r,j) => {
+        h += `<div><label class="alan-lbl">${r.l}</label>
+        <input class="inp" type="text" id="c${i}_b${j}" placeholder="..." oninput="prog()"></div>`;
+      });
+      h += `</div>`;
+    }
+    div.innerHTML = h;
+    body.appendChild(div);
+  });
+
+  const btn = document.createElement("div");
+  btn.className = "teslim-wrap";
+  btn.innerHTML = `<button class="btn-teslim" onclick="onay()">✅ Sınavı Teslim Et</button>`;
+  body.appendChild(btn);
+}
+
+function prog() {
+  let n = 0;
+  sorular.forEach((s,i) => {
+    if (s.tip==="tanim" && document.getElementById(`c${i}`)?.value?.trim()) n++;
+    else if (s.tip==="sayisal" && document.getElementById(`c${i}_${s.alanlar[0].key}`)?.value?.trim()) n++;
+    else if (s.tip==="bosluk" && document.getElementById(`c${i}_b0`)?.value?.trim()) n++;
+  });
+  document.getElementById("p-f").style.width = (n/TOPLAM_SORU*100)+"%";
+  document.getElementById("p-t").textContent = `${n} / ${TOPLAM_SORU}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TESLİM
+// ═══════════════════════════════════════════════════════════
+function onay() {
+  if (confirm("Sınavı teslim etmek istiyor musunuz?")) bitir();
+}
+
+async function bitir() {
+  clearInterval(timer);
+  goster("yukleme");
+  const gecen = Math.floor((Date.now() - baslangic) / 1000);
+  const toplanmis = topla();
+
+  let sonuc;
+  try {
+    sonuc = await claudeDegerlendir(toplanmis);
+  } catch(e) {
+    sonuc = yerelDegerlendir(toplanmis);
+  }
+
+  // Google Sheets'e kaydet
+  await sheetsKaydet(sonuc, gecen);
+  gosterSonuc(sonuc, gecen);
+}
+
+function topla() {
+  return sorular.map((s,i) => {
+    if (s.tip==="tanim") return {...s, ogCevap: document.getElementById(`c${i}`)?.value?.trim()||""};
+    else if (s.tip==="sayisal") {
+      const vals={};
+      s.alanlar.forEach(a => vals[a.key]=document.getElementById(`c${i}_${a.key}`)?.value?.trim()||"");
+      return {...s, vals};
+    } else {
+      const vals = s.satirlar.map((r,j)=>({...r,ogCevap:document.getElementById(`c${i}_b${j}`)?.value?.trim()||""}));
+      return {...s, vals};
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CLAUDE DEĞERLENDİRME
+// ═══════════════════════════════════════════════════════════
+async function claudeDegerlendir(toplanmis) {
+  const tanimlar = toplanmis.filter(s=>s.tip==="tanim");
+  const yerel = yerelDegerlendir(toplanmis);
+
+  const prompt = `Haritacılıkta Mesleki Hesaplamalar dersi, MYO 1. sınıf öğrencisi.
+Öğrenci: ${adi} (${no}) — Hafta ${HAFTA_NO}
+
+${tanimlar.map((s,i)=>`
+[${i+1}] Maks ${s.puan} puan
+Soru: ${s.soru}
+Öğrenci: "${s.ogCevap}"
+Anahtar: ${s.anahtarlar.join(", ")}
+İdeal: ${s.ideal}`).join("")}
+
+MYO düzeyinde değerlendir, çok katı olma.
+SADECE JSON döndür:
+{"d":[${tanimlar.map((s,i)=>`{"i":${i},"p":0,"f":""}`).join(",")}]}
+p=puan(0-${Math.max(...tanimlar.map(s=>s.puan))}), f=1 cümle Türkçe geri bildirim`;
+
+  const resp = await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:600,
+      messages:[{role:"user",content:prompt}]})
+  });
+  const data = await resp.json();
+  const json = JSON.parse(data.content[0].text.replace(/```json|```/g,"").trim());
+
+  const tIdx = toplanmis.map((s,i)=>s.tip==="tanim"?i:-1).filter(i=>i>=0);
+  json.d.forEach((d,di) => {
+    const s = yerel.sorular[tIdx[di]];
+    if (s) { yerel.toplamPuan -= s.alinan; s.alinan=Math.max(0,Math.min(d.p,s.max)); s.geri=d.f; s.aiYapti=true; yerel.toplamPuan+=s.alinan; }
+  });
+  return yerel;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  YEREL DEĞERLENDİRME
+// ═══════════════════════════════════════════════════════════
+function yerelDegerlendir(toplanmis) {
+  let toplam = 0;
+  const srs = toplanmis.map(s => {
+    if (s.tip==="tanim") {
+      const c=(s.ogCevap||"").toLowerCase();
+      const b=s.anahtarlar.filter(k=>c.includes(k.toLowerCase())).length;
+      const alinan=Math.round(s.puan*Math.min(b/s.anahtarlar.length*1.6,1));
+      toplam+=alinan;
+      return {id:s.id||0,tip:"tanim",konu:s.konu,soru:s.soru,alinan,max:s.puan,
+        ogCevap:s.ogCevap,ideal:s.ideal,
+        geri:alinan===s.puan?"Mükemmel!":alinan>0?"Kısmi doğru.":"Eksik veya boş."};
+    } else if (s.tip==="sayisal") {
+      let puan=0;
+      const detay=s.alanlar.map(a=>{
+        const g=parseFloat((s.vals[a.key]||"").replace(",","."));
+        const d=!isNaN(g)&&Math.abs(g-a.dogru)<=a.tol;
+        if(d) puan+=s.puan/s.alanlar.length;
+        return {label:a.label,dogru:d,girilen:s.vals[a.key]||"—",beklenen:String(a.dogru)};
+      });
+      puan=Math.round(puan); toplam+=puan;
+      return {tip:"sayisal",konu:s.konu,soru:s.soru,alinan:puan,max:s.puan,detay,cozum:s.cozum};
+    } else {
+      let puan=0;
+      const detay=s.vals.map(v=>{
+        const g=(v.ogCevap||"").toLowerCase().replace(/\s/g,"");
+        const d=v.ak.some(k=>g.includes(k.toLowerCase().replace(/\s/g,"")));
+        if(d) puan+=s.puan/s.satirlar.length;
+        return {label:v.l,dogru:d,girilen:v.ogCevap||"—",beklenen:v.d};
+      });
+      puan=Math.round(puan); toplam+=puan;
+      return {tip:"bosluk",konu:s.konu,alinan:puan,max:s.puan,detay};
+    }
+  });
+  return {toplamPuan:Math.min(toplam,100),sorular:srs};
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GOOGLE SHEETS KAYIT
+// ═══════════════════════════════════════════════════════════
+let sheetsOk = false;
+async function sheetsKaydet(veri, gecen) {
+  if (SHEETS_URL === "BURAYA_APPS_SCRIPT_URL_YAPISTIR") return;
+  try {
+    const tam = veri.sorular.filter(s=>s.alinan===s.max).length;
+    const yanl = veri.sorular.filter(s=>s.alinan===0).length;
+    const kism = veri.sorular.length - tam - yanl;
+    await fetch(SHEETS_URL, {
+      method:"POST",
+      headers:{"Content-Type":"text/plain"},
+      body: JSON.stringify({
+        hafta: HAFTA_NO, adi, no,
+        puan: veri.toplamPuan,
+        sure: gecen,
+        dogru: tam + kism,
+        yanlis: yanl,
+        tamDogru: tam,
+        kismi: kism,
+        seed,
+        tabUyari
+      })
+    });
+    sheetsOk = true;
+  } catch(e) { sheetsOk = false; }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SONUÇ GÖSTERİMİ
+// ═══════════════════════════════════════════════════════════
+function gosterSonuc(veri, gecen) {
+  goster("sonuc");
+  const p = veri.toplamPuan;
+  const gec = p>=50;
+  const harf = p>=90?"AA":p>=80?"BA":p>=70?"BB":p>=60?"CB":p>=50?"CC":"FF";
+  const mesaj = p>=90?"🎉 Mükemmel!":p>=70?"✅ Başarılı!":p>=50?"👍 Geçer.":"❌ Tekrar çalış.";
+  const tam = veri.sorular.filter(s=>s.alinan===s.max).length;
+  const dk=Math.floor(gecen/60), sn=gecen%60;
+  const aiVar = veri.sorular.some(s=>s.aiYapti);
+
+  document.getElementById("son-ozet").innerHTML=`
+    <div style="text-align:center;margin-bottom:16px">
+      ${aiVar?'<span class="ai-badge">🤖 Claude AI</span>':''}
+      ${sheetsOk?'<span class="sheets-badge">📊 Sheets\'e Kaydedildi</span>':''}
+      <div class="nd ${gec?"gec":"kaldi"}">
+        <div class="nd-p">${p}</div><div class="nd-a">/ 100</div>
+      </div>
+      <div class="harf" style="color:${gec?"#27ae60":"#e74c3c"}">${harf}</div>
+      <div class="mesaj">${mesaj}</div>
+      <div class="ogr-a">${adi} · ${no} · Hafta ${HAFTA_NO}</div>
+    </div>
+    <div class="ist-grid">
+      <div class="ist d"><div class="ist-n">${tam}</div><div class="ist-l">✅ Tam</div></div>
+      <div class="ist y"><div class="ist-n">${TOPLAM_SORU-tam}</div><div class="ist-l">⚠️ Eksik</div></div>
+      <div class="ist s"><div class="ist-n">${String(dk).padStart(2,"0")}:${String(sn).padStart(2,"0")}</div><div class="ist-l">⏱ Süre</div></div>
+    </div>
+    ${!sheetsOk&&SHEETS_URL!=="BURAYA_APPS_SCRIPT_URL_YAPISTIR"?'<div class="kayit-durum hata">⚠️ Sheets bağlantısı kurulamadı — sonuçları not alın</div>':''}`;
+
+  let dh=`<div class="det-bas">📋 Detaylı Sonuç</div>`;
+  veri.sorular.forEach((s,i)=>{
+    const d=s.alinan===s.max?"tam":s.alinan===0?"yanl":"kism";
+    const e=s.alinan===s.max?"✅":s.alinan===0?"❌":"🔶";
+    dh+=`<div class="det-s ${d}"><div class="det-no">${e} Soru ${i+1} — ${s.konu}<span class="det-puan">${s.alinan}/${s.max}p</span></div>`;
+    if(s.tip==="tanim"){
+      if(s.ogCevap) dh+=`<div class="det-sat" style="font-style:italic;color:#666">✏️ ${s.ogCevap.substring(0,100)}${s.ogCevap.length>100?"...":""}</div>`;
+      if(s.geri) dh+=`<div class="det-sat">💬 ${s.aiYapti?"🤖 ":""}${s.geri}</div>`;
+      if(s.alinan<s.max) dh+=`<div class="det-sat dc">📖 ${s.ideal}</div>`;
+    } else if(s.tip==="sayisal"){
+      s.detay.forEach(d=>{ dh+=`<div class="det-sat">${d.dogru?"✅":"❌"} ${d.label} <span class="${d.dogru?"dc":"yc"}">${d.girilen}</span>${!d.dogru?` <span class="dc">→ ${d.beklenen}</span>`:""}</div>`; });
+      if(s.alinan<s.max) dh+=`<div class="det-sat" style="color:#888;font-size:11px">📐 ${s.cozum}</div>`;
+    } else {
+      s.detay.forEach(d=>{ dh+=`<div class="det-sat">${d.dogru?"✅":"❌"} ${d.label}: <span class="${d.dogru?"dc":"yc"}">${d.girilen}</span>${!d.dogru?` <span class="dc">→ ${d.beklenen}</span>`:""}</div>`; });
+    }
+    dh+=`</div>`;
+  });
+  document.getElementById("son-detay").innerHTML=dh+`<button class="btn-tekrar" onclick="location.reload()">🔄 Yeniden Dene</button>`;
+}
+</script>
+</body>
+</html>
